@@ -1086,7 +1086,7 @@ function App() {
 
       const response =
         await fetch(
-          'http://localhost:8000/pick-order',
+          'https://smart-warehouse-picker.onrender.com/pick-order',
           {
             method:
               'POST',
