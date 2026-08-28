@@ -2244,9 +2244,17 @@ function App() {
               max: 30,
             },
             resizeMode: 'crop-and-scale',
+
+            advanced: [
+              {
+                focusMode: 'continuous',
+              },
+              {
+                zoom: 1.5,
+              },
+            ],
           },
         }
-
         const stream =
           await navigator.mediaDevices
             .getUserMedia(
