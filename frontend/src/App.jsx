@@ -1599,6 +1599,11 @@ function App() {
 
       try {
 
+        if (videoRef.current?.__autoTorchTimer) {
+          window.clearInterval(videoRef.current.__autoTorchTimer)
+          videoRef.current.__autoTorchTimer = null
+        }
+
         if (
           nativeScanFrameRef.current
         ) {
@@ -2268,6 +2273,34 @@ function App() {
           stream
 
         await videoRef.current.play()
+        videoRef.current.__manualTorch = false
+        if (videoRef.current.__autoTorchTimer) {
+          window.clearInterval(videoRef.current.__autoTorchTimer)
+        }
+        const autoTorch = async () => {
+          const video = videoRef.current
+          const streamTrack = cameraStreamRef.current?.getVideoTracks?.()[0]
+          if (!video || !streamTrack || video.__manualTorch || torchOnRef.current) return
+          try {
+            const canvas = video.__autoTorchCanvas || (video.__autoTorchCanvas = document.createElement('canvas'))
+            canvas.width = 96
+            canvas.height = 54
+            const ctx = canvas.getContext('2d', { willReadFrequently: true })
+            if (!ctx || video.readyState < 2) return
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+            let total = 0
+            for (let i = 0; i < pixels.length; i += 4) total += 0.2126 * pixels[i] + 0.7152 * pixels[i + 1] + 0.0722 * pixels[i + 2]
+            const average = total / (pixels.length / 4)
+            const capabilities = streamTrack.getCapabilities?.() || {}
+            if (average < 68 && capabilities.torch) {
+              await streamTrack.applyConstraints({ advanced: [{ torch: true }] })
+              torchOnRef.current = true
+              setTorchOn(true)
+            }
+          } catch { }
+        }
+        videoRef.current.__autoTorchTimer = window.setInterval(autoTorch, 700)
 
         const track =
           stream.getVideoTracks()[0]
@@ -2451,52 +2484,24 @@ function App() {
   // ========================================
 
   const toggleTorch = async () => {
-
-    const stream =
-      cameraStreamRef.current ||
-      videoRef.current?.srcObject
-
-    const track =
-      stream?.getVideoTracks?.()[0]
-
-    if (!track) {
-      return
-    }
-
+    const stream = cameraStreamRef.current || videoRef.current?.srcObject
+    const track = stream?.getVideoTracks?.()[0]
+    if (!track) return
     try {
-      const capabilities =
-        track.getCapabilities?.() || {}
-
+      const capabilities = track.getCapabilities?.() || {}
       if (!capabilities.torch) {
-        setCameraError(
-          'Torch is not supported on this camera.'
-        )
+        setCameraError('Torch is not supported on this camera.')
         return
       }
-
-      torchOnRef.current =
-        !torchOnRef.current
-
-      setTorchOn(
-        torchOnRef.current
-      )
-
+      if (videoRef.current) videoRef.current.__manualTorch = true
+      torchOnRef.current = !torchOnRef.current
+      setTorchOn(torchOnRef.current)
       await track.applyConstraints({
-        advanced: [
-          {
-            torch:
-              torchOnRef.current,
-          },
-        ],
+        advanced: [{ torch: torchOnRef.current }],
       })
-
       setCameraError('')
-
     } catch (err) {
-      console.debug(
-        'Torch error:',
-        err
-      )
+      console.debug('Torch error:', err)
     }
   }
 
@@ -3632,6 +3637,11 @@ function App() {
                           }}
                           style={{
                             marginTop: '4px',
+                            width: '120px',
+                            minHeight: '42px',
+                            padding: '8px 12px',
+                            fontSize: '14px',
+                            alignSelf: 'center',
                           }}
                         >
                           🔦 {torchOn ? 'Turn Torch Off' : 'Torch'}
