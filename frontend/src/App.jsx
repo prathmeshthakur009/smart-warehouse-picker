@@ -90,32 +90,32 @@ const productInfo = {
 
   'frozen french fries': {
     size: '500 g',
-    photo: '',
+    photo: '/products/Frozen french fries.jpg',
   },
 
   'frozen nuggets': {
     size: '500 g',
-    photo: '',
+    photo: '/products/Frozen nuggets.jpg',
   },
 
   'frozen peas': {
     size: '500 g',
-    photo: '',
+    photo: '/products/frozen peas.jpg',
   },
 
   'frozen corn': {
     size: '500 g',
-    photo: '',
+    photo: '/products/Frozen corn.jpg',
   },
 
   'frozen samosa': {
     size: '500 g',
-    photo: '',
+    photo: '/products/Frozen samosa.jpg',
   },
 
   'frozen paratha': {
     size: '400 g',
-    photo: '',
+    photo: '/products/Frozen paratha.jpg',
   },
 
   milk: {
@@ -125,172 +125,172 @@ const productInfo = {
 
   'curd / dahi': {
     size: '500 g',
-    photo: '',
+    photo: '/products/Curd.jpg',
   },
 
   butter: {
     size: '500 g',
-    photo: '',
+    photo: '/products/Butter.jpg',
   },
 
   paneer: {
     size: '200 g',
-    photo: '',
+    photo: '/products/Paneer.jpg',
   },
 
   cheese: {
     size: '200 g',
-    photo: '',
+    photo: '/products/Cheese.jpg',
   },
 
   chocolate: {
     size: '100 g',
-    photo: '',
+    photo: '/products/Chocolate.jpg',
   },
 
   'cold drink / soft drink': {
     size: '750 ml',
-    photo: '',
+    photo: '/products/Cold drink.jpg',
   },
 
   juice: {
     size: '1 L',
-    photo: '',
+    photo: '/products/Juice.jpg',
   },
 
   potato: {
     size: '1 kg',
-    photo: '',
+    photo: '/products/Potato.jpg',
   },
 
   onion: {
     size: '1 kg',
-    photo: '',
+    photo: '/products/Onion.jpg',
   },
 
   tomato: {
     size: '1 kg',
-    photo: '',
+    photo: '/products/Tomato.jpg',
   },
 
   lemon: {
     size: '500 g',
-    photo: '',
+    photo: '/products/Lemon.jpg',
   },
 
   'coriander / dhaniya': {
     size: '100 g',
-    photo: '',
+    photo: '/products/Coriander.jpg',
   },
 
   'green chilli': {
     size: '250 g',
-    photo: '',
+    photo: '/products/Green chilli.jpg',
   },
 
   ginger: {
     size: '250 g',
-    photo: '',
+    photo: '/products/Ginger.jpg',
   },
 
   garlic: {
     size: '250 g',
-    photo: '',
+    photo: '/products/Garlic.jpg',
   },
 
   'maggi / instant noodles': {
     size: '280 g',
-    photo: '',
+    photo: '/products/Maggi.jpg',
   },
 
   biscuits: {
     size: '200 g',
-    photo: '',
+    photo: '/products/Biscuits.jpg',
   },
 
   bread: {
     size: '400 g',
-    photo: '',
+    photo: '/products/Bread.jpg',
   },
 
   'cooking oil': {
     size: '1 L',
-    photo: '',
+    photo: '/products/Cooking oil.jpg',
   },
 
   'wheat flour / atta': {
     size: '5 kg',
-    photo: '',
+    photo: '/products/Atta.jpg',
   },
 
   rice: {
     size: '5 kg',
-    photo: '',
+    photo: '/products/Rice.jpg',
   },
 
   sugar: {
     size: '1 kg',
-    photo: '',
+    photo: '/products/Sugar.jpg',
   },
 
   salt: {
     size: '1 kg',
-    photo: '',
+    photo: '/products/Salt.jpg',
   },
 
   tea: {
     size: '250 g',
-    photo: '',
+    photo: '/products/Tea.jpg',
   },
 
   coffee: {
     size: '200 g',
-    photo: '',
+    photo: '/products/Coffee.jpg',
   },
 
   chips: {
     size: '100 g',
-    photo: '',
+    photo: '/products/Chips.jpg',
   },
 
   namkeen: {
     size: '200 g',
-    photo: '',
+    photo: '/products/Namkeen.jpg',
   },
 
   lipstick: {
     size: '1 pc',
-    photo: '',
+    photo: '/products/Lipstick.jpg',
   },
 
   'water bottle': {
     size: '1 L',
-    photo: '',
+    photo: '/products/Water bottle.jpg',
   },
 
   'tiffin box': {
     size: '1 pc',
-    photo: '',
+    photo: '/products/Tiffin box.jpg',
   },
 
   'mobile stand': {
     size: '1 pc',
-    photo: '',
+    photo: '/products/Mobile stand.jpg',
   },
 
   'eveready ultima': {
     size: '1 pc',
-    photo: '',
+    photo: '/products/Eveready Ultima.jpg',
   },
 
   football: {
     size: '1 pc',
-    photo: '',
+    photo: '/products/Football.jpg',
   },
 
   'soft toy': {
     size: '1 pc',
-    photo: '',
+    photo: '/products/Soft toy.jpg',
   },
 }
 
