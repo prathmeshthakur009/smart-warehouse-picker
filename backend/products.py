@@ -251,7 +251,7 @@ PRODUCTS = {
         category="GROCERY",
         bin_address="A1-01-01-A",
         zone="AMBIENT",
-        barcode="890000000024",
+        barcode="8901058017687",
     ),
 
     "biscuits": Product(
