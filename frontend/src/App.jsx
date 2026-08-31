@@ -538,6 +538,12 @@ function App() {
   const torchOnRef =
     useRef(false)
 
+  const autoTorchIntervalRef =
+    useRef(null)
+
+  const autoTorchBusyRef =
+    useRef(false)
+
 
   // ========================================
   // AUDIO HELPERS
@@ -1599,11 +1605,6 @@ function App() {
 
       try {
 
-        if (videoRef.current?.__autoTorchTimer) {
-          window.clearInterval(videoRef.current.__autoTorchTimer)
-          videoRef.current.__autoTorchTimer = null
-        }
-
         if (
           nativeScanFrameRef.current
         ) {
@@ -1668,6 +1669,14 @@ function App() {
         time: 0,
       }
 
+      if (autoTorchIntervalRef.current) {
+        window.clearInterval(
+          autoTorchIntervalRef.current
+        )
+        autoTorchIntervalRef.current = null
+      }
+
+      autoTorchBusyRef.current = false
       torchOnRef.current = false
       setTorchOn(false)
 
@@ -2069,12 +2078,43 @@ function App() {
           track.getCapabilities?.() || {}
 
         if (
+          typeof capabilities.focusDistance?.min ===
+          'number' &&
+          typeof capabilities.focusDistance?.max ===
+          'number'
+        ) {
+          const range =
+            capabilities.focusDistance.max -
+            capabilities.focusDistance.min
+
+          const targetFocusDistance =
+            capabilities.focusDistance.min +
+            range * 0.05
+
+          await track.applyConstraints({
+            advanced: [
+              {
+                focusDistance:
+                  targetFocusDistance,
+              },
+            ],
+          })
+        }
+      } catch {
+        // Focus distance is optional.
+      }
+
+      try {
+        const capabilities =
+          track.getCapabilities?.() || {}
+
+        if (
           typeof capabilities.zoom?.max ===
           'number'
         ) {
           const targetZoom =
             Math.min(
-              1.25,
+              1.0,
               capabilities.zoom.max
             )
 
@@ -2237,12 +2277,12 @@ function App() {
               ideal: 'environment',
             },
             width: {
-              ideal: 1600,
-              max: 1920,
+              ideal: 1920,
+              max: 2560,
             },
             height: {
-              ideal: 900,
-              max: 1080,
+              ideal: 1080,
+              max: 1440,
             },
             frameRate: {
               ideal: 30,
@@ -2253,9 +2293,6 @@ function App() {
             advanced: [
               {
                 focusMode: 'continuous',
-              },
-              {
-                zoom: 1.5,
               },
             ],
           },
@@ -2273,34 +2310,6 @@ function App() {
           stream
 
         await videoRef.current.play()
-        videoRef.current.__manualTorch = false
-        if (videoRef.current.__autoTorchTimer) {
-          window.clearInterval(videoRef.current.__autoTorchTimer)
-        }
-        const autoTorch = async () => {
-          const video = videoRef.current
-          const streamTrack = cameraStreamRef.current?.getVideoTracks?.()[0]
-          if (!video || !streamTrack || video.__manualTorch || torchOnRef.current) return
-          try {
-            const canvas = video.__autoTorchCanvas || (video.__autoTorchCanvas = document.createElement('canvas'))
-            canvas.width = 96
-            canvas.height = 54
-            const ctx = canvas.getContext('2d', { willReadFrequently: true })
-            if (!ctx || video.readyState < 2) return
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data
-            let total = 0
-            for (let i = 0; i < pixels.length; i += 4) total += 0.2126 * pixels[i] + 0.7152 * pixels[i + 1] + 0.0722 * pixels[i + 2]
-            const average = total / (pixels.length / 4)
-            const capabilities = streamTrack.getCapabilities?.() || {}
-            if (average < 68 && capabilities.torch) {
-              await streamTrack.applyConstraints({ advanced: [{ torch: true }] })
-              torchOnRef.current = true
-              setTorchOn(true)
-            }
-          } catch { }
-        }
-        videoRef.current.__autoTorchTimer = window.setInterval(autoTorch, 700)
 
         const track =
           stream.getVideoTracks()[0]
@@ -2308,6 +2317,18 @@ function App() {
         await applyCameraQuality(
           track
         )
+
+        if (autoTorchIntervalRef.current) {
+          window.clearInterval(
+            autoTorchIntervalRef.current
+          )
+        }
+
+        autoTorchIntervalRef.current =
+          window.setInterval(
+            autoAdjustTorch,
+            700
+          )
 
         // Prefer native BarcodeDetector when
         // supported by the browser; it is often
@@ -2484,24 +2505,171 @@ function App() {
   // ========================================
 
   const toggleTorch = async () => {
-    const stream = cameraStreamRef.current || videoRef.current?.srcObject
-    const track = stream?.getVideoTracks?.()[0]
-    if (!track) return
+
+    const stream =
+      cameraStreamRef.current ||
+      videoRef.current?.srcObject
+
+    const track =
+      stream?.getVideoTracks?.()[0]
+
+    if (!track) {
+      return
+    }
+
     try {
-      const capabilities = track.getCapabilities?.() || {}
+      const capabilities =
+        track.getCapabilities?.() || {}
+
       if (!capabilities.torch) {
-        setCameraError('Torch is not supported on this camera.')
+        setCameraError(
+          'Use your phone flashlight on this camera.'
+        )
         return
       }
-      if (videoRef.current) videoRef.current.__manualTorch = true
-      torchOnRef.current = !torchOnRef.current
-      setTorchOn(torchOnRef.current)
+
+      const nextTorchState =
+        !torchOnRef.current
+
       await track.applyConstraints({
-        advanced: [{ torch: torchOnRef.current }],
+        advanced: [
+          {
+            torch:
+              nextTorchState,
+          },
+        ],
       })
+
+      torchOnRef.current =
+        nextTorchState
+
+      setTorchOn(
+        nextTorchState
+      )
+
       setCameraError('')
+
     } catch (err) {
-      console.debug('Torch error:', err)
+      console.debug(
+        'Torch error:',
+        err
+      )
+    }
+  }
+
+
+  const autoAdjustTorch = async () => {
+
+    if (
+      autoTorchBusyRef.current ||
+      !cameraStreamRef.current ||
+      !videoRef.current ||
+      videoRef.current.readyState < 2
+    ) {
+      return
+    }
+
+    const track =
+      cameraStreamRef.current
+        ?.getVideoTracks?.()[0]
+
+    if (!track) {
+      return
+    }
+
+    autoTorchBusyRef.current = true
+
+    try {
+      const capabilities =
+        track.getCapabilities?.() || {}
+
+      if (!capabilities.torch) {
+        return
+      }
+
+      const canvas =
+        document.createElement('canvas')
+
+      canvas.width = 64
+      canvas.height = 36
+
+      const context =
+        canvas.getContext('2d', {
+          willReadFrequently: true,
+        })
+
+      if (!context) {
+        return
+      }
+
+      context.drawImage(
+        videoRef.current,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      )
+
+      const pixels =
+        context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        ).data
+
+      let total = 0
+
+      for (
+        let index = 0;
+        index < pixels.length;
+        index += 4
+      ) {
+        total +=
+          (pixels[index] +
+            pixels[index + 1] +
+            pixels[index + 2]) /
+          3
+      }
+
+      const average =
+        total /
+        (pixels.length / 4)
+
+      const shouldUseTorch =
+        torchOnRef.current
+          ? average < 70
+          : average < 45
+
+      if (
+        shouldUseTorch !==
+        torchOnRef.current
+      ) {
+        await track.applyConstraints({
+          advanced: [
+            {
+              torch:
+                shouldUseTorch,
+            },
+          ],
+        })
+
+        torchOnRef.current =
+          shouldUseTorch
+
+        setTorchOn(
+          shouldUseTorch
+        )
+      }
+
+    } catch (err) {
+      console.debug(
+        'Auto torch error:',
+        err
+      )
+    } finally {
+      autoTorchBusyRef.current =
+        false
     }
   }
 
